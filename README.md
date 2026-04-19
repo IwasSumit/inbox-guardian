@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Inbox Guardian
 
-## Getting Started
+Inbox Guardian is a user-facing web application that helps users clean and manage their Gmail inbox intelligently.
 
-First, run the development server:
+(Currently still in building stage and yet to be deployed for users. If you want to explore the functionalities now then take a pull and run locally.)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+It allows users to:
+- log in with Google
+- view Gmail-based dashboard insights
+- auto-delete old spam emails
+- auto-delete old promotional and delivery clutter
+- review unknown or potentially important emails before deletion
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This project is currently built as a full-stack Next.js application using direct Google OAuth and the Gmail API.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Current Features
 
-## Learn More
+### Authentication
+- Google OAuth login
+- Session-based access for Gmail operations
+- Logout support
 
-To learn more about Next.js, take a look at the following resources:
+### Dashboard
+- Gmail inbox count
+- Spam count
+- Promotions count
+- Important count
+- Unknown/review-needed count
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Cleanup Actions
+- Delete old spam emails older than 5 days
+- Delete old promotional and delivery clutter older than 60 days
+- Delete individual unknown/review emails manually
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Review Queue
+- Unknown and promotional emails can be reviewed before deletion
+- Toast feedback for actions like deletion success/failure
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Tech Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Frontend + Backend:** Next.js (App Router)
+- **Language:** TypeScript
+- **Auth:** Google OAuth 2.0
+- **Email API:** Gmail API
+- **Session Handling:** Signed cookie session
+- **Future Enhancements:** AI-based classification, sender insights, unsubscribe flows, monthly analytics reports
+
+---
+
+## Project Structure
+
+```text
+frontend/
+  app/
+    api/
+      auth/
+        google/
+      dashboard-stats/
+      dashboard-review/
+      delete/
+      auto-clean/
+      auto-clean-promo/
+    dashboard/
+      DashboardClient.tsx
+      page.tsx
+    globals.css
+    layout.tsx
+    page.tsx
+  lib/
+    auth/
+    gmail/
+    domain/
+    utils/
