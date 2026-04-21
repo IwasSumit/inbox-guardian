@@ -1,7 +1,5 @@
 # Inbox Guardian
 
-# Inbox Guardian
-
 Inbox Guardian is a user-facing web application that helps users clean, analyze, and manage their Gmail inbox intelligently.
 
 It reduces inbox clutter by identifying:
