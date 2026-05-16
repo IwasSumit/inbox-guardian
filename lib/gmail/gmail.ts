@@ -101,6 +101,40 @@ async function getSingleLabelCount(
   }
 }
 
+export async function fetchPromotionMessageIds(
+  accessToken: string,
+  maxResults = 500
+): Promise<string[]> {
+  const gmail = getGmailClient(accessToken);
+
+  const res = await gmail.users.messages.list({
+    userId: "me",
+    labelIds: ["CATEGORY_PROMOTIONS"],
+    maxResults
+  });
+
+  return (res.data.messages || [])
+    .map((m) => m.id)
+    .filter((id): id is string => Boolean(id));
+}
+
+export async function fetchSpamMessageIds(
+  accessToken: string,
+  maxResults = 500
+): Promise<string[]> {
+  const gmail = getGmailClient(accessToken);
+
+  const res = await gmail.users.messages.list({
+    userId: "me",
+    labelIds: ["SPAM"],
+    maxResults
+  });
+
+  return (res.data.messages || [])
+    .map((m) => m.id)
+    .filter((id): id is string => Boolean(id));
+}
+
 export async function getLabelCounts(accessToken: string) {
   const [inbox, spam, promotions, important] = await Promise.all([
     getSingleLabelCount(accessToken, "INBOX"),

@@ -24,6 +24,7 @@ export type DashboardData = {
   approvalList: (GmailEmail & { category: EmailCategory; ageDays: number })[];
   oldSpamDeleteList: (GmailEmail & { category: "SPAM"; ageDays: number })[];
   oldPromoDeleteList: (GmailEmail & { category: "OLD_CLUTTER"; ageDays: number })[];
+  allPromoDeleteList: (GmailEmail & { category: "OLD_CLUTTER"; ageDays: number })[];
 };
 
 export type SessionData = {

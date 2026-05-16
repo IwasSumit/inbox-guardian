@@ -1,26 +1,19 @@
-export default function Home() {
+import { getSession } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
+
+export default async function Home() {
+  const session = await getSession();
+
+  if (session) {
+    redirect("/dashboard");
+  }
+
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
-      }}
-    >
-      <div
-        style={{
-          background: "white",
-          padding: 32,
-          borderRadius: 20,
-          width: "100%",
-          maxWidth: 420
-        }}
-      >
-        <h1 style={{ fontSize: 42, color: "black", marginBottom: 12 }}>
-          Inbox Guardian
-        </h1>
-        <p style={{ color: "#475569", marginBottom: 24 }}>
+    <main className="page" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="card" style={{ width: "100%", maxWidth: 460 }}>
+        <h1 className="title">Inbox Guardian</h1>
+
+        <p className="subtitle" style={{ marginBottom: 24, lineHeight: 1.6 }}>
           Secure AI-powered Gmail cleanup with direct Google integration.
         </p>
 
@@ -32,11 +25,19 @@ export default function Home() {
             color: "white",
             padding: "14px 16px",
             borderRadius: 14,
-            textAlign: "center"
+            textAlign: "center",
+            marginBottom: 20
           }}
         >
           Continue with Google
         </a>
+
+        <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6 }}>
+          By continuing, you agree to our{" "}
+          <a href="/terms" style={{ color: "#2563eb" }}>Terms</a>{" "}
+          and{" "}
+          <a href="/privacy" style={{ color: "#2563eb" }}>Privacy Policy</a>.
+        </p>
       </div>
     </main>
   );

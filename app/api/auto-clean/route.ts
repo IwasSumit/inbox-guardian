@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession, createSession } from "@/lib/auth/session";
-import { deleteEmail, refreshAccessToken } from "@/lib/gmail/gmail";
+import {
+  deleteEmail,
+  refreshAccessToken,
+  fetchSpamMessageIds
+} from "@/lib/gmail/gmail";
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -16,6 +20,7 @@ export async function POST(req: NextRequest) {
 
     if (refreshed.access_token) {
       accessToken = refreshed.access_token;
+
       await createSession({
         ...session,
         accessToken,
@@ -26,7 +31,12 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const messageIds: string[] = body.messageIds || [];
+
+  let messageIds: string[] = body.messageIds || [];
+
+  if (body.deleteAllSpam) {
+    messageIds = await fetchSpamMessageIds(accessToken, 500);
+  }
 
   for (const id of messageIds) {
     await deleteEmail(accessToken, id);

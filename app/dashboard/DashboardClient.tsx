@@ -16,7 +16,8 @@ export default function DashboardClient({ userName }: { userName: string }) {
     },
     approvalList: [],
     oldSpamDeleteList: [],
-    oldPromoDeleteList: []
+    oldPromoDeleteList: [],
+    allPromoDeleteList: []
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +74,7 @@ export default function DashboardClient({ userName }: { userName: string }) {
         approvalList: json.approvalList || [],
         oldSpamDeleteList: json.oldSpamDeleteList || [],
         oldPromoDeleteList: json.oldPromoDeleteList || [],
+        allPromoDeleteList: json.allPromoDeleteList || [],
         stats: {
           ...prev.stats,
           unknown: (json.approvalList || []).filter(
@@ -169,6 +171,106 @@ export default function DashboardClient({ userName }: { userName: string }) {
     }
   };
 
+  const autoCleanAllPromoNow = async () => {
+  console.log("Delete all promo clicked");
+
+  if (promoDeleting) return;
+
+  const confirmed = window.confirm(
+    `This will delete up to ${data.stats.promotion} promotional email(s). Continue?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setPromoDeleting(true);
+    setError(null);
+    setSuccess("Deleting promotional emails. Please wait...");
+
+    const res = await fetch("/api/auto-clean-promo", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        deleteAllPromotions: true
+      })
+    });
+
+    const text = await res.text();
+    const json = text ? JSON.parse(text) : {};
+
+    if (!res.ok) {
+      throw new Error(json.error || "Failed to delete promotional emails");
+    }
+
+    setSuccess(`${json.deleted} promotional mails deleted successfully.`);
+
+    setData((prev) => ({
+      ...prev,
+      stats: {
+        ...prev.stats,
+        promotion: Math.max(0, prev.stats.promotion - json.deleted)
+      }
+    }));
+
+    await loadStats();
+  } catch (err: any) {
+    setError(err.message || "Failed to delete promotional emails");
+  } finally {
+    setPromoDeleting(false);
+  }
+};
+
+const autoCleanAllSpamNow = async () => {
+  if (spamDeleting) return;
+
+  const confirmed = window.confirm(
+    `This will delete up to ${data.stats.spam} spam email(s). Continue?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setSpamDeleting(true);
+    setError(null);
+    setSuccess("Deleting spam emails. Please wait...");
+
+    const res = await fetch("/api/auto-clean", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        deleteAllSpam: true
+      })
+    });
+
+    const text = await res.text();
+    const json = text ? JSON.parse(text) : {};
+
+    if (!res.ok) {
+      throw new Error(json.error || "Failed to delete spam emails");
+    }
+
+    setSuccess(`${json.deleted} spam mails deleted successfully.`);
+
+    setData((prev) => ({
+      ...prev,
+      stats: {
+        ...prev.stats,
+        spam: Math.max(0, prev.stats.spam - json.deleted)
+      }
+    }));
+
+    await loadStats();
+  } catch (err: any) {
+    setError(err.message || "Failed to delete spam emails");
+  } finally {
+    setSpamDeleting(false);
+  }
+};
+  
   const approveDelete = async (messageId: string) => {
   if (singleDeleteLoadingId) return;
 
@@ -223,15 +325,17 @@ export default function DashboardClient({ userName }: { userName: string }) {
   }, []);
 
   useEffect(() => {
-    if (!success && !error) return;
+  if (!success && !error) return;
 
-    const timer = setTimeout(() => {
-      setSuccess(null);
-      setError(null);
-    }, 3000);
+  if (promoDeleting || spamDeleting || singleDeleteLoadingId) return;
 
-    return () => clearTimeout(timer);
-  }, [success, error]);
+  const timer = setTimeout(() => {
+    setSuccess(null);
+    setError(null);
+  }, 3000);
+
+  return () => clearTimeout(timer);
+}, [success, error, promoDeleting, spamDeleting, singleDeleteLoadingId]);
 
   return (
     <>
@@ -330,41 +434,77 @@ export default function DashboardClient({ userName }: { userName: string }) {
                 marginBottom: 16
               }}
             >
-              <button
-                onClick={autoCleanSpam}
-                disabled={reviewLoading || spamDeleting}
-                style={{
-                  background: reviewLoading || spamDeleting ? "#fca5a5" : "#dc2626",
-                  color: "white",
-                  border: "none",
-                  padding: "12px 18px",
-                  borderRadius: 14,
-                  cursor: reviewLoading || spamDeleting ? "not-allowed" : "pointer",
-                  opacity: reviewLoading || spamDeleting ? 0.7 : 1
-                }}
-              >
-                {spamDeleting
-                  ? "Deleting Spam..."
-                  : `Delete Old Spam (${data.oldSpamDeleteList.length})`}
-              </button>
+             <button
+  onClick={autoCleanSpam}
+  disabled={reviewLoading || spamDeleting}
+  style={{
+    background: reviewLoading || spamDeleting ? "#fca5a5" : "#dc2626",
+    color: "white",
+    border: "none",
+    padding: "12px 18px",
+    borderRadius: 14,
+    cursor: reviewLoading || spamDeleting ? "not-allowed" : "pointer",
+    opacity: reviewLoading || spamDeleting ? 0.7 : 1
+  }}
+>
+  {spamDeleting
+    ? "Deleting Spam..."
+    : `Delete Old Spam (${data.oldSpamDeleteList.length})`}
+</button>
 
-              <button
-                onClick={autoCleanPromo}
-                disabled={reviewLoading || promoDeleting}
-                style={{
-                  background: reviewLoading || promoDeleting ? "#fdba74" : "#f97316",
-                  color: "white",
-                  border: "none",
-                  padding: "12px 18px",
-                  borderRadius: 14,
-                  cursor: reviewLoading || promoDeleting ? "not-allowed" : "pointer",
-                  opacity: reviewLoading || promoDeleting ? 0.7 : 1
-                }}
-              >
-                {promoDeleting
-                  ? "Deleting Promo & Delivery..."
-                  : `Delete Old Promo & Delivery (${data.oldPromoDeleteList.length})`}
-              </button>
+<button
+  onClick={autoCleanAllSpamNow}
+  disabled={spamDeleting || data.stats.spam === 0}
+  style={{
+    background: spamDeleting ? "#fca5a5" : "#b91c1c",
+    color: "white",
+    border: "none",
+    padding: "12px 18px",
+    borderRadius: 14,
+    cursor: spamDeleting || data.stats.spam === 0 ? "not-allowed" : "pointer",
+    opacity: spamDeleting || data.stats.spam === 0 ? 0.7 : 1
+  }}
+>
+  {spamDeleting
+    ? "Deleting Spam..."
+    : `Delete All Spam Now (${data.stats.spam})`}
+</button>
+
+<button
+  onClick={autoCleanPromo}
+  disabled={reviewLoading || promoDeleting}
+  style={{
+    background: reviewLoading || promoDeleting ? "#fdba74" : "#f97316",
+    color: "white",
+    border: "none",
+    padding: "12px 18px",
+    borderRadius: 14,
+    cursor: reviewLoading || promoDeleting ? "not-allowed" : "pointer",
+    opacity: reviewLoading || promoDeleting ? 0.7 : 1
+  }}
+>
+  {promoDeleting
+    ? "Deleting Promo & Delivery..."
+    : `Delete Old Promo & Delivery (${data.oldPromoDeleteList.length})`}
+</button>
+
+<button
+  onClick={autoCleanAllPromoNow}
+  disabled={promoDeleting || data.stats.promotion === 0}
+  style={{
+    background: promoDeleting ? "#fdba74" : "#ea580c",
+    color: "white",
+    border: "none",
+    padding: "12px 18px",
+    borderRadius: 14,
+    cursor: promoDeleting || data.stats.promotion === 0 ? "not-allowed" : "pointer",
+    opacity: promoDeleting || data.stats.promotion === 0 ? 0.7 : 1
+  }}
+>
+  {promoDeleting
+    ? "Deleting Promotions..."
+    : `Delete All Promo & Delivery Now (${data.stats.promotion})`}
+</button>
             </div>
 
             <p style={{ color: "#475569" }}>
